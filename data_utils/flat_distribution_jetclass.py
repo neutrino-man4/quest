@@ -14,7 +14,7 @@ from sklearn.utils import resample
 BINS = np.arange(500., 1001., 50.)   # pt bins in GeV, [500, 550, ..., 1000]
 
 
-def flatten_feature_distribution(feature: np.ndarray, num_events: int) -> list:
+def flatten_feature_distribution(feature: np.ndarray, num_events: int) -> list[int]:
     """Return indices that sample up to num_events jets from each pt bin."""
     bin_indices = np.digitize(feature, BINS)
     sampled = []
@@ -41,22 +41,27 @@ if __name__ == '__main__':
     out_dir  = f'/tmp/abal/QML/JetClass/flat_{purpose}/{signal}/'
     pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)
 
-    file_paths = sorted(glob.glob(os.path.join(base_dir, '*.h5')))
-    jet_pt_idx = 0   # jet_pt is the first column in jetFeatures
+    file_paths: list[str] = sorted(glob.glob(os.path.join(base_dir, '*.h5')))
+    jet_pt_idx: int = 0   # jet_pt is the first column in jetFeatures
 
-    pfc, pfc_4vec, jet_feats, pfc_extra = [], [], [], []
+    # Read string metadata from first file before the main loop
+    with h5py.File(file_paths[0], 'r') as f0:
+        jet_feature_names:   np.ndarray = f0['jetFeatureNames'][()]
+        particle_feat_names: np.ndarray = f0['particleFeatureNames'][()]
+        extra_feature_names: np.ndarray = f0['jetConstituentsExtraNames'][()]
 
-    for i, file_path in enumerate(tqdm.tqdm(file_paths)):
+    pfc:       list[np.ndarray] = []
+    pfc_4vec:  list[np.ndarray] = []
+    jet_feats: list[np.ndarray] = []
+    pfc_extra: list[np.ndarray] = []
+
+    for file_path in tqdm.tqdm(file_paths):
         with h5py.File(file_path, 'r') as f:
-            idx = flatten_feature_distribution(f['jetFeatures'][:, jet_pt_idx], num_events_per_bin)
+            idx: list[int] = flatten_feature_distribution(f['jetFeatures'][:, jet_pt_idx], num_events_per_bin)
             pfc.append(f['jetConstituentsList'][()][idx])
             pfc_4vec.append(f['jetConstituentsListFourVectors'][()][idx])
             jet_feats.append(f['jetFeatures'][()][idx])
             pfc_extra.append(f['jetConstituentsExtra'][()][idx])
-            if i == 0:
-                jet_feature_names    = f['jetFeatureNames'][()]
-                particle_feat_names  = f['particleFeatureNames'][()]
-                extra_feature_names  = f['jetConstituentsExtraNames'][()]
 
     pfc       = np.concatenate(pfc,      axis=0)
     pfc_4vec  = np.concatenate(pfc_4vec, axis=0)
