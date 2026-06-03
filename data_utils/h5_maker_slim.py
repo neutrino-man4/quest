@@ -4,8 +4,14 @@ import numpy as np
 import awkward as ak
 import os, glob, h5py, pathlib
 
-jet_type = 'TTBarLep'  # HToGG HToCC HToBB WToQQ ZToQQ TTBar_ TTBarLep
-dataset_type = 'test'  # train val test
+import argparse
+
+_parser = argparse.ArgumentParser()
+_parser.add_argument('--jet_type', type=str, required=True)
+_parser.add_argument('--dataset_type', type=str, choices=['train', 'val', 'test'], required=True)
+_args = _parser.parse_args()
+jet_type = _args.jet_type
+dataset_type = _args.dataset_type
 
 
 def zero_pad_to_numpy_array(awkward_array, target_length=100, pad_value=0):
@@ -77,7 +83,7 @@ def make_h5(rfile='test.root'):
 
 
 if __name__ == '__main__':
-    multi = False
+    multi = True
     file_dir = 'train'
     if dataset_type == 'test':
         file_dir = 'test_20M'
