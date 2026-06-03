@@ -1,0 +1,24 @@
+general:
+  id: "RUN_001"
+  seed: 42
+data:
+  base_path: /ceph/abal/QML/JetClass/
+  jet_types:
+    - HToBB
+    - HToCC
+    - HToGG
+    - HToWW4Q
+    - TTBar_
+    - TTBarLep
+    - WToQQ
+    - ZJetsToNuNu
+    - ZToQQ
+  signal: TTBar_
+  background: ZJetsToNuNu
+  num_particles: 10
+  n_train: 100000
+  n_val: 20000
+  n_test: 100000
+  batch_size: 1
+  pt_range: [500, 1000]
+  flatten: true
