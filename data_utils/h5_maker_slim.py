@@ -22,7 +22,9 @@ def zero_pad_to_numpy_array(awkward_array, target_length=100, pad_value=0):
 
 
 def make_h5(rfile='test.root'):
-    out_dir = f'/ceph/abal/QML/JetClass/{dataset_type}/{jet_type}'
+    fname = os.path.basename(rfile)
+    print(f"[{jet_type}/{dataset_type}] Starting: {fname}", flush=True)
+    out_dir = f'/ceph/abal/JetClass/{dataset_type}/{jet_type}'
     pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)
 
     jet_feature_names = ['jet_pt', 'jet_eta', 'jet_phi', 'jet_energy', 'jet_nparticles', 'jet_sdmass', 'jet_tau1', 'jet_tau2', 'jet_tau3', 'jet_tau4']
@@ -70,8 +72,8 @@ def make_h5(rfile='test.root'):
     assert not np.isnan(jet_pfc).any(), "Nan in jet_pfc"
     assert not np.isnan(jet_features).any(), "Nan in jet_features"
 
-    fname = os.path.split(rfile)[-1].replace('.root', '.h5')
-    out_file = os.path.join(out_dir, fname)
+    out_fname = fname.replace('.root', '.h5')
+    out_file = os.path.join(out_dir, out_fname)
     with h5py.File(out_file, 'w') as f:
         f.create_dataset('jetConstituentsList', data=jet_pfc)
         f.create_dataset('jetConstituentsListFourVectors', data=jet_pfc_4vec)
@@ -80,6 +82,8 @@ def make_h5(rfile='test.root'):
         f.create_dataset('particleFeatureNames', data=np.array(particle_feature_names, dtype=dt))
         f.create_dataset('jetConstituentsExtra', data=part_extra)
         f.create_dataset('jetConstituentsExtraNames', data=np.array(part_extra_names, dtype=dt))
+    print(f"[{jet_type}/{dataset_type}] Done:     {fname}", flush=True)
+    return fname
 
 
 if __name__ == '__main__':
@@ -91,13 +95,20 @@ if __name__ == '__main__':
         file_dir = 'val_5M'
     base_path = f'/ceph/bmaier/qml/ae/rawdata/JetClass/{file_dir}'
     file_paths = glob.glob(os.path.join(base_path, f'{jet_type}*.root'))
+    n_total = len(file_paths)
+    log_interval = 20
     if multi:
         from multiprocessing import Pool
         from time import sleep
-        num_cores = min(len(file_paths), 20)
-        print(f"Will use {num_cores} cores to process {len(file_paths)} files")
+        num_cores = min(n_total, 20)
+        print(f"[{jet_type}/{dataset_type}] {n_total} files, {num_cores} cores")
         pool = Pool(num_cores); sleep(3)
-        pool.map(make_h5, file_paths)
+        for i, _ in enumerate(pool.imap_unordered(make_h5, file_paths), start=1):
+            if i % log_interval == 0 or i == n_total:
+                print(f"[{jet_type}/{dataset_type}] Progress: {i}/{n_total} files complete", flush=True)
+        pool.close(); pool.join()
     else:
-        for filename in file_paths:
+        for i, filename in enumerate(file_paths, start=1):
             make_h5(filename)
+            if i % log_interval == 0 or i == n_total:
+                print(f"[{jet_type}/{dataset_type}] Progress: {i}/{n_total} files complete", flush=True)
