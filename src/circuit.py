@@ -12,30 +12,33 @@ import pennylane as qml
 import pennylane.numpy as pnp
 
 from src import operations as ops
-from src.mfunc import sigmoid
 
 
 class QuantumClassifier:
     """
     CV quantum circuit for binary jet classification.
 
-    Weight layout: [3 * layers * qumodes variational params | 1 scale factor]
-    Total trainable parameters: 3 * layers * qumodes + 1
+    Weight shape: (layers, qumodes, params_per_state)
+    Total trainable parameters: layers * qumodes * params_per_state
     """
 
     def __init__(
         self,
         qumodes: int,
         layers: int,
+        params_per_state: int,
         device_name: str = "default.gaussian",
         shots: Optional[int] = None,
         backend: str = "autograd",
         diff_method: str = "parameter_shift",
         measurement: str = "homodyne",
         measurement_mode: int = 0,
+        input_scale: float = 1.0,
     ) -> None:
         self.qumodes = qumodes
         self.layers = layers
+        self.params_per_state = params_per_state
+        self.input_scale = input_scale
         self.backend = backend
         self.measurement = measurement
         self.measurement_mode = measurement_mode
@@ -53,12 +56,11 @@ class QuantumClassifier:
         )
 
     def _circuit(self, weights: pnp.tensor, inputs: pnp.tensor):
-        # learnable input scale factor, bounded to (0.01, 10.01)
-        sf = 10.0 * sigmoid(weights[-1]) + 0.01
-        ops.state_preparation(inputs, self._wires, sf)
+        # weights shape: (layers, qumodes, params_per_state)
+        ops.state_preparation(inputs, self._wires, self.input_scale)
         for L in range(self.layers):
             ops.entanglement_layer(self._wire_pairs)
-            ops.variational_layer(weights, self._wires, L)
+            ops.variational_layer(weights[L], self._wires)
 
         if self.measurement == "homodyne":
             return qml.expval(qml.QuadX(self.measurement_mode))
@@ -66,13 +68,13 @@ class QuantumClassifier:
 
     @property
     def n_params(self) -> int:
-        """3 params per mode per layer, plus 1 global scale factor."""
-        return 3 * self.layers * self.qumodes + 1
+        return self.layers * self.qumodes * self.params_per_state
 
     def init_weights(self, seed: Optional[int] = None) -> pnp.tensor:
         rng = np.random.default_rng(seed)
+        shape = (self.layers, self.qumodes, self.params_per_state)
         self.current_weights = pnp.array(
-            rng.uniform(-np.pi, np.pi, self.n_params).astype(np.float64),
+            rng.uniform(-np.pi, np.pi, shape).astype(np.float64),
             requires_grad=True,
         )
         return self.current_weights
