@@ -28,8 +28,7 @@ circuit:
   device: default.gaussian
   qumodes: 10          # must match data.num_particles
   layers: 4            # number of variational layers
-  cutoff_dim: 10       # Fock space truncation; increase for accuracy, costs memory
-  shots: null          # null = analytic (exact); integer = sampled
+shots: null          # null = analytic (exact); integer = sampled
   diff_method: parameter_shift
   measurement: homodyne  # homodyne (X quadrature) -> real value -> BCE via sigmoid
 
