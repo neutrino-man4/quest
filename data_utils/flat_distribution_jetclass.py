@@ -41,23 +41,20 @@ if __name__ == '__main__':
     out_dir  = f'/tmp/abal/QML/JetClass/flat_{purpose}/{signal}/'
     pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)
 
-    file_paths: list[str] = sorted(glob.glob(os.path.join(base_dir, '*.h5')))
-    jet_pt_idx: int = 0   # jet_pt is the first column in jetFeatures
+    file_paths = sorted(glob.glob(os.path.join(base_dir, '*.h5')))
+    jet_pt_idx = 0   # jet_pt is the first column in jetFeatures
 
     # Read string metadata from first file before the main loop
     with h5py.File(file_paths[0], 'r') as f0:
-        jet_feature_names:   np.ndarray = f0['jetFeatureNames'][()]
-        particle_feat_names: np.ndarray = f0['particleFeatureNames'][()]
-        extra_feature_names: np.ndarray = f0['jetConstituentsExtraNames'][()]
+        jet_feature_names   = f0['jetFeatureNames'][()]
+        particle_feat_names = f0['particleFeatureNames'][()]
+        extra_feature_names = f0['jetConstituentsExtraNames'][()]
 
-    pfc:       list[np.ndarray] = []
-    pfc_4vec:  list[np.ndarray] = []
-    jet_feats: list[np.ndarray] = []
-    pfc_extra: list[np.ndarray] = []
+    pfc, pfc_4vec, jet_feats, pfc_extra = [], [], [], []
 
     for file_path in tqdm.tqdm(file_paths):
         with h5py.File(file_path, 'r') as f:
-            idx: list[int] = flatten_feature_distribution(f['jetFeatures'][:, jet_pt_idx], num_events_per_bin)
+            idx = flatten_feature_distribution(f['jetFeatures'][:, jet_pt_idx], num_events_per_bin)
             pfc.append(f['jetConstituentsList'][()][idx])
             pfc_4vec.append(f['jetConstituentsListFourVectors'][()][idx])
             jet_feats.append(f['jetFeatures'][()][idx])
