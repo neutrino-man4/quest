@@ -32,6 +32,7 @@ circuit:
   shots: null          # null = analytic (exact); integer = sampled
   diff_method: parameter_shift
   measurement: homodyne  # homodyne (X quadrature) -> real value -> BCE via sigmoid
+  measurement_mode: 0   # which qumode to measure
 
 training:
   backend: autograd
