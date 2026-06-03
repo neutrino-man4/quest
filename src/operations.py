@@ -27,13 +27,11 @@ def entanglement_layer(wire_pairs: list) -> None:
         qml.ControlledAddition(1.0, wires=pair)
 
 
-def variational_layer(weights: pnp.tensor, wires: list, layer_idx: int) -> None:
-    """Parameterized displacement + squeezing per mode for one layer."""
-    N = len(wires)
-    start = 3 * layer_idx * N
+def variational_layer(layer_weights: pnp.tensor, wires: list) -> None:
+    """layer_weights shape: (n_qumodes, params_per_state); uses first 3 params per mode."""
     for i, w in enumerate(wires):
-        phi   = weights[start + i]
-        theta = weights[start + N + i]
-        omega = weights[start + 2 * N + i]
+        phi   = layer_weights[i, 0]
+        theta = layer_weights[i, 1]
+        omega = layer_weights[i, 2]
         qml.Displacement(theta, phi, wires=w)
         qml.Squeezing(omega, pnp.pi / 4.0, wires=w)
