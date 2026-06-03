@@ -16,10 +16,8 @@ def sigmoid(x: pnp.tensor) -> pnp.tensor:
 def binary_cross_entropy(labels: pnp.tensor, scores: pnp.tensor) -> pnp.tensor:
     """BCE from raw scores (applies sigmoid internally)."""
     probs = sigmoid(scores)
-    return -pnp.mean(
-        labels * pnp.log(probs + _EPS) + (1.0 - labels) * pnp.log(1.0 - probs + _EPS)
-    )
+    return -(labels * pnp.log(probs + _EPS) + (1.0 - labels) * pnp.log(1.0 - probs + _EPS))
 
 
 def mean_squared_error(labels: pnp.tensor, scores: pnp.tensor) -> pnp.tensor:
-    return pnp.mean((scores - labels) ** 2)
+    return (scores - labels) ** 2
