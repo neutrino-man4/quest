@@ -1,6 +1,7 @@
 general:
   id: "RUN_001"
   seed: 42
+
 data:
   base_path: /ceph/abal/QML/JetClass/
   jet_types:
@@ -22,3 +23,31 @@ data:
   batch_size: 1
   pt_range: [500, 1000]
   flatten: true
+
+circuit:
+  device: default.gaussian
+  qumodes: 10          # must match data.num_particles
+  layers: 4            # number of variational layers
+  cutoff_dim: 10       # Fock space truncation; increase for accuracy, costs memory
+  shots: null          # null = analytic (exact); integer = sampled
+  diff_method: parameter_shift
+  measurement: homodyne  # homodyne (X quadrature) -> real value -> BCE via sigmoid
+
+training:
+  backend: autograd
+  optimizer: adam
+  learning_rate: 0.01
+  epochs: 50
+  loss: bce            # bce | mae
+  checkpoint_every: 1  # save params every N epochs
+
+paths:
+  model_dir: /work/abal/quest/models/
+  inference_results_dir: /ceph/abal/quest/
+  log_dir: /work/abal/quest/logs/
+
+wandb:
+  enabled: false
+  project: quest
+  entity: null
+  run_name: null
