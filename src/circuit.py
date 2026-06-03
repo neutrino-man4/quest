@@ -26,37 +26,26 @@ class QuantumClassifier:
     Total trainable parameters: layers * qumodes * params_per_state
     """
 
-    def __init__(
-        self,
-        qumodes: int,
-        layers: int,
-        params_per_state: int,
-        device_name: str = "default.gaussian",
-        shots: Optional[int] = None,
-        backend: str = "autograd",
-        diff_method: str = "parameter_shift",
-        measurement: str = "homodyne",
-        measurement_mode: int = 0,
-        input_scale: float = 1.0,
-    ) -> None:
-        self.qumodes = qumodes
-        self.layers = layers
-        self.params_per_state = params_per_state
-        self.input_scale = input_scale
-        self.backend = backend
-        self.measurement = measurement
-        self.measurement_mode = measurement_mode
+    def __init__(self, config) -> None:
+        ccfg = config.circuit
+        self.qumodes          = int(ccfg.qumodes)
+        self.layers           = int(ccfg.layers)
+        self.params_per_state = int(ccfg.params_per_state)
+        self.input_scale      = float(getattr(ccfg, "input_scale", 1.0))
+        self.backend          = str(config.training.backend)
+        self.measurement      = str(ccfg.measurement)
+        self.measurement_mode = int(ccfg.measurement_mode)
         self.current_weights: Optional[pnp.tensor] = None
 
-        self._wires = list(range(qumodes))
+        self._wires      = list(range(self.qumodes))
         self._wire_pairs = list(combinations(self._wires, 2))
 
-        self.device = qml.device(device_name, wires=qumodes, shots=shots)
+        self.device = qml.device(ccfg.device, wires=self.qumodes, shots=ccfg.shots or None)
         self._qnode = qml.QNode(
             self._circuit,
             self.device,
-            interface=backend,
-            diff_method=diff_method,
+            interface=self.backend,
+            diff_method=str(ccfg.diff_method),
         )
 
     def _circuit(self, weights: pnp.tensor, inputs: pnp.tensor):
