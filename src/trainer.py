@@ -47,10 +47,9 @@ class QuantumTrainer:
         tcfg = config.training
         self.epochs = int(tcfg.epochs)
         self.checkpoint_every = int(tcfg.checkpoint_every)
-        self.model_dir = config.paths.model_dir
-
-        self.checkpoint_dir = os.path.join(self.model_dir, "checkpoints")
-        os.makedirs(self.checkpoint_dir, exist_ok=True)
+        self.checkpoint_dir = config.paths.checkpoint_dir
+        self.plot_dir = config.paths.plot_dir
+        self.run_dir = config.paths.run_dir
 
         self.optimizer = qml.AdamOptimizer(stepsize=float(tcfg.learning_rate))
         self.history: Dict[str, List[float]] = {
@@ -151,7 +150,7 @@ class QuantumTrainer:
                 self._save_checkpoint(epoch)
                 logger.info(f"Checkpoint saved at epoch {epoch}")
 
-        final_path = os.path.join(self.model_dir, "final_weights.npy")
+        final_path = os.path.join(self.run_dir, "final_weights.npy")
         self.model.save_weights(final_path)
         logger.info(f"Training complete. Final weights -> {final_path}")
         return self.history
