@@ -27,7 +27,8 @@ data:
 circuit:
   device: default.gaussian
   qumodes: 10          # must match data.num_particles
-  layers: 4            # number of variational layers
+  layers: 4            # number of circuit layers
+  params_per_state: 10  # trainable params per qumode per layer
   shots: null          # null = analytic (exact); integer = sampled
   diff_method: parameter_shift
   measurement: homodyne  # homodyne (X quadrature) -> real value -> BCE via sigmoid
