@@ -4,9 +4,13 @@ Author: Aritra Bal (ETP)
 Date: 2026-06-03
 """
 
+import os
 from itertools import combinations
 from typing import Optional
 
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 import numpy as np
 import pennylane as qml
 import pennylane.numpy as pnp
@@ -87,3 +91,13 @@ class QuantumClassifier:
 
     def save_weights(self, path: str) -> None:
         np.save(path, np.array(self.current_weights))
+
+    def _circuit_diagram(self, plot_dir: str) -> None:
+        """Draw circuit via qml.draw_mpl and save to plot_dir/circuit.png."""
+        w = self.current_weights if self.current_weights is not None else pnp.array(
+            np.zeros((self.layers, self.qumodes, self.params_per_state)), requires_grad=False
+        )
+        dummy_inputs = np.zeros((self.qumodes, 3), dtype=np.float64)
+        fig, _ = qml.draw_mpl(self._qnode)(w, dummy_inputs)
+        fig.savefig(os.path.join(plot_dir, "circuit.png"), bbox_inches="tight", dpi=150)
+        plt.close(fig)
