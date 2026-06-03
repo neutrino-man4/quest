@@ -17,8 +17,6 @@ def bce_loss(
 ) -> pnp.tensor:
     """BCE loss; sigmoid is applied inside mfunc.binary_cross_entropy."""
     scores = pnp.array(quantum_circuit(weights, inputs), requires_grad=True)
-    # mean over modes -> scalar score per sample
-    scores = pnp.mean(scores, axis=-1)
     return mfunc.binary_cross_entropy(labels, scores)
 
 
@@ -29,7 +27,6 @@ def mse_loss(
     labels: pnp.tensor,
 ) -> pnp.tensor:
     scores = pnp.array(quantum_circuit(weights, inputs), requires_grad=True)
-    scores = pnp.mean(scores, axis=-1)
     return mfunc.mean_squared_error(labels, scores)
 
 
