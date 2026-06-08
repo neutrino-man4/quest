@@ -11,7 +11,7 @@ import sys
 import numpy as np
 from loguru import logger
 
-import configs
+import configs.configs as configs
 import data_utils.dataloader as dataloader
 import src.circuit as cq
 import src.losses as losses
