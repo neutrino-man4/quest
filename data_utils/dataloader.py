@@ -101,8 +101,8 @@ def _make_collate(batch_size: int):
             data = data[0]      # (P, 3)
             labels = labels[0]  # scalar
         return (
-            pnp.tensor(data, requires_grad=False),
-            pnp.tensor(labels, requires_grad=False),
+            pnp.array(data, requires_grad=False),
+            pnp.array(labels, requires_grad=False),
         )
 
     return collate_fn
