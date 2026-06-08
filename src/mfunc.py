@@ -10,6 +10,7 @@ _EPS = 1e-7  # numerical stability for log
 
 
 def sigmoid(x: pnp.tensor) -> pnp.tensor:
+    """Sigmoid function."""
     return 1.0 / (1.0 + pnp.exp(-x))
 
 
@@ -20,4 +21,5 @@ def binary_cross_entropy(labels: pnp.tensor, scores: pnp.tensor) -> pnp.tensor:
 
 
 def mean_squared_error(labels: pnp.tensor, scores: pnp.tensor) -> pnp.tensor:
+    """Mean squared error."""
     return (scores - labels) ** 2
