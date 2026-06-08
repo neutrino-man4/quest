@@ -37,12 +37,12 @@ if __name__ == '__main__':
     signal = args.signal
     num_events_per_bin = args.num_events_per_bin
 
-    base_dir = f'/ceph/abal/QML/JetClass/{purpose}/{signal}/'
-    out_dir  = f'/tmp/abal/QML/JetClass/flat_{purpose}/{signal}/'
+    base_dir = f'/ceph/abal/JetClass/{purpose}/{signal}/'
+    out_dir  = f'/ceph/abal/JetClass/flat_{purpose}/{signal}/'
     pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)
 
     file_paths = sorted(glob.glob(os.path.join(base_dir, '*.h5')))
-    jet_pt_idx = 0   # jet_pt is the first column in jetFeatures
+    JET_PT_IDX = 0   # jet_pt is the first column in jetFeatures
 
     # Read string metadata from first file before the main loop
     with h5py.File(file_paths[0], 'r') as f0:
@@ -54,7 +54,7 @@ if __name__ == '__main__':
 
     for file_path in tqdm.tqdm(file_paths):
         with h5py.File(file_path, 'r') as f:
-            idx = flatten_feature_distribution(f['jetFeatures'][:, jet_pt_idx], num_events_per_bin)
+            idx = flatten_feature_distribution(f['jetFeatures'][:, JET_PT_IDX], num_events_per_bin)
             pfc.append(f['jetConstituentsList'][()][idx])
             pfc_4vec.append(f['jetConstituentsListFourVectors'][()][idx])
             jet_feats.append(f['jetFeatures'][()][idx])
@@ -68,6 +68,14 @@ if __name__ == '__main__':
     # 0 for ZJetsToNuNu (background), 1 for everything else (signal)
     truth_label  = 0 if 'ZJets' in signal else 1
     truth_labels = np.full(jet_feats.shape[0], truth_label, dtype=np.float32)
+
+    # shuffle all arrays together after concatenation (order was file -> pt bin)
+    perm     = np.random.default_rng(141098).permutation(len(pfc))
+    pfc      = pfc[perm]
+    pfc_4vec = pfc_4vec[perm]
+    jet_feats    = jet_feats[perm]
+    pfc_extra    = pfc_extra[perm]
+    truth_labels = truth_labels[perm]
 
     out_file = os.path.join(out_dir, f'{signal}_flat_pt_sample.h5')
     with h5py.File(out_file, 'w') as f:
