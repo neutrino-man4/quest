@@ -26,6 +26,7 @@ def mse_loss(
     quantum_circuit,
     labels: pnp.tensor,
 ) -> pnp.tensor:
+    """MSE loss over raw circuit scores."""
     scores = pnp.array(quantum_circuit(weights, inputs), requires_grad=True)
     return mfunc.mean_squared_error(labels, scores)
 
