@@ -49,6 +49,7 @@ class QuantumClassifier:
         )
 
     def _circuit(self, weights: pnp.tensor, inputs: pnp.tensor):
+        """Run the CV quantum circuit."""
         # weights shape: (layers, qumodes, params_per_state)
         ops.state_preparation(inputs, self._wires, self.input_scale)
         for L in range(self.layers):
@@ -61,9 +62,11 @@ class QuantumClassifier:
 
     @property
     def n_params(self) -> int:
+        """Total number of trainable parameters."""
         return self.layers * self.qumodes * self.params_per_state
 
     def init_weights(self, seed: Optional[int] = None) -> pnp.tensor:
+        """Randomly initialise weights in [-pi, pi]."""
         rng = np.random.default_rng(seed)
         shape = (self.layers, self.qumodes, self.params_per_state)
         self.current_weights = pnp.array(
@@ -73,12 +76,15 @@ class QuantumClassifier:
         return self.current_weights
 
     def fetch_circuit(self) -> qml.QNode:
+        """Return the compiled QNode."""
         return self._qnode
 
     def load_weights(self, path: str) -> None:
+        """Load weights from a .npy file."""
         self.current_weights = pnp.array(np.load(path), requires_grad=True)
 
     def save_weights(self, path: str) -> None:
+        """Save current weights to a .npy file."""
         np.save(path, np.array(self.current_weights))
 
     def _circuit_diagram(self, plot_dir: str) -> None:
