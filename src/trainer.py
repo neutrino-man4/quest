@@ -57,6 +57,15 @@ class QuantumTrainer:
         }
 
     def _train_step(self, data: pnp.tensor, labels: pnp.tensor) -> float:
+        """Run one Adam step; returns scalar batch loss.
+
+        Args:
+            data:   input tensor for one batch
+            labels: ground-truth labels for that batch
+
+        Returns:
+            float batch loss before the weight update
+        """
         self.model.current_weights, cost = self.optimizer.step_and_cost(
             self.loss_fn,
             self.model.current_weights,
@@ -67,12 +76,29 @@ class QuantumTrainer:
         return float(cost)
 
     def _val_step(self, data: pnp.tensor, labels: pnp.tensor):
+        """Forward pass with frozen weights; returns (loss, raw score).
+
+        Args:
+            data:   input tensor for one batch
+            labels: ground-truth labels for that batch
+
+        Returns:
+            tuple of (float loss, float circuit score)
+        """
         w = pnp.array(self.model.current_weights, requires_grad=False)
         loss = self.loss_fn(w, data, self.circuit, labels)
         score = float(self.circuit(w, data))
         return float(loss), score
 
     def _run_train_epoch(self, loader) -> float:
+        """Iterate over train_loader for one epoch; returns mean loss.
+
+        Args:
+            loader: iterable of (data, labels) batches
+
+        Returns:
+            mean train loss over all batches
+        """
         losses = []
         for data, labels in tqdm(loader, desc="  train", leave=False):
             loss = self._train_step(data, labels)
@@ -82,6 +108,14 @@ class QuantumTrainer:
         return float(np.mean(losses))
 
     def _run_val(self, loader):
+        """Iterate over val_loader; returns (mean_loss, scores, labels).
+
+        Args:
+            loader: iterable of (data, labels) batches
+
+        Returns:
+            tuple of (float mean_loss, ndarray scores, ndarray labels)
+        """
         val_losses, val_scores, val_labels = [], [], []
         for data, labels in tqdm(loader, desc="  val  ", leave=False):
             loss, score = self._val_step(data, labels)
@@ -97,6 +131,13 @@ class QuantumTrainer:
     def _plot_roc_to_wandb(
         self, scores: np.ndarray, labels: np.ndarray, epoch: int
     ) -> None:
+        """Plot and log ROC curve to wandb for the given epoch.
+
+        Args:
+            scores: raw circuit output scores
+            labels: ground-truth binary labels
+            epoch:  current epoch number (used in plot title)
+        """
         fpr, tpr, _ = roc_curve(labels, scores)
         fig, ax = plt.subplots(figsize=(5, 5))
         ax.plot(fpr, tpr)
@@ -109,10 +150,24 @@ class QuantumTrainer:
         plt.close(fig)
 
     def _save_checkpoint(self, epoch: int) -> None:
+        """Save current weights to checkpoint_dir/ep<epoch>.npy.
+
+        Args:
+            epoch: current epoch number (used in filename)
+        """
         path = os.path.join(self.checkpoint_dir, f"ep{epoch:03d}.npy")
         np.save(path, np.array(self.model.current_weights))
 
     def train(self, train_loader, val_loader) -> Dict[str, List[float]]:
+        """Run full training loop and return loss/AUC history.
+
+        Args:
+            train_loader: iterable of (data, labels) for training
+            val_loader:   iterable of (data, labels) for validation
+
+        Returns:
+            dict with keys 'train_loss', 'val_loss', 'val_auc' (lists over epochs)
+        """
         logger.info(
             f"Starting training | epochs={self.epochs} | n_params={self.model.n_params}"
         )
