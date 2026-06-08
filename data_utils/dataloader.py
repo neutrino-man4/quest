@@ -6,6 +6,7 @@ Author: Aritra Bal (ETP)
 Date: 2026-06-03
 """
 
+import argparse
 import glob
 import os
 import warnings
@@ -132,7 +133,7 @@ def get_dataloader(
     signal: str = cfg.signal
     background: str = cfg.background
     if background != "ZJetsToNuNu":
-        warnings.warn(f"Background is '{background}', not ZJetsToNuNu — this is not QCD jets.")
+        warnings.warn(f"Background is '{background}', not ZJetsToNuNu. This is not QCD.")
     flatten: bool = bool(cfg.flatten)
     batch_size: int = int(cfg.batch_size)
     num_particles: int = int(cfg.num_particles)
@@ -169,3 +170,24 @@ def get_dataloader(
         return _build("test")
 
     return _build("train"), _build("val")
+
+
+if __name__ == "__main__":
+    from configs.configs import load_config
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--config",
+        default="/work/abal/quest/configs/base.yaml",
+        help="Path to YAML config file",
+    )
+    args = parser.parse_args()
+
+    cfg = load_config(args.config)
+    train_loader, val_loader = get_dataloader(cfg, scenario="train")
+
+    data, label = next(iter(train_loader))
+    print(f"Train batches : {len(train_loader)}")
+    print(f"Val batches   : {len(val_loader)}")
+    print(f"Sample shape  : {data.shape}")
+    print(f"Label         : {label}")
