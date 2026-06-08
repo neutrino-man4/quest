@@ -11,11 +11,11 @@ import sys
 import numpy as np
 from loguru import logger
 
-from configs import load_config
-from data_utils.dataloader import get_dataloader
-from src.circuit import QuantumClassifier
-from src.losses import get_loss_fn
-from src.trainer import QuantumTrainer
+import configs
+import data_utils.dataloader as dataloader
+import src.circuit as cq
+import src.losses as losses
+import src.trainer as trn
 
 
 # ---------------------------------------------------------------------------
@@ -74,7 +74,7 @@ def main() -> None:
     args = parser.parse_args()
 
     # --- config & dirs ---
-    cfg = load_config(args.config)
+    cfg = configs.load_config(args.config)
     run_id: str = cfg.general.id
 
     _setup_logging(cfg.paths.log_dir, run_id)
@@ -91,7 +91,7 @@ def main() -> None:
 
     # --- data ---
     logger.info("Loading train/val dataloaders ...")
-    train_loader, val_loader = get_dataloader(cfg, scenario="train")
+    train_loader, val_loader = dataloader.get_dataloader(cfg, scenario="train")
     logger.info(
         f"Train size: {len(train_loader.dataset)} | "
         f"Val size: {len(val_loader.dataset)} | "
@@ -100,7 +100,7 @@ def main() -> None:
 
     # --- model ---
     logger.info("Building quantum circuit ...")
-    model = QuantumClassifier(cfg)
+    model = cq.QuantumClassifier(cfg)
     weights = model.init_weights(seed=seed)
     logger.info(
         f"Circuit | qumodes={model.qumodes} | layers={model.layers} | "
@@ -115,11 +115,11 @@ def main() -> None:
         logger.warning(f"Could not save circuit diagram: {e}")
 
     # --- loss ---
-    loss_fn = get_loss_fn(cfg.training.loss)
+    loss_fn = losses.get_loss_fn(cfg.training.loss)
     logger.info(f"Loss function: {cfg.training.loss}")
 
     # --- train ---
-    trainer = QuantumTrainer(model, loss_fn, cfg, wandb_run=wandb_run)
+    trainer = trn.QuantumTrainer(model, loss_fn, cfg, wandb_run=wandb_run)
     history = trainer.train(train_loader, val_loader)
 
     # --- save history ---
