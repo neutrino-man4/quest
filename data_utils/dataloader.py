@@ -131,6 +131,8 @@ def get_dataloader(
     base_path: str = cfg.base_path
     signal: str = cfg.signal
     background: str = cfg.background
+    if background != "ZJetsToNuNu":
+        warnings.warn(f"Background is '{background}', not ZJetsToNuNu — this is not QCD jets.")
     flatten: bool = bool(cfg.flatten)
     batch_size: int = int(cfg.batch_size)
     num_particles: int = int(cfg.num_particles)
