@@ -52,9 +52,9 @@ class QuantumClassifier:
         """Run the CV quantum circuit."""
         # weights shape: (layers, qumodes, params_per_state)
         ops.state_preparation(inputs, self._wires, self.input_scale)
-        for L in range(self.layers):
+        for layer in range(self.layers):
             ops.entanglement_layer(self._wire_pairs)
-            ops.variational_layer(weights[L], self._wires)
+            ops.variational_layer(weights[layer], self._wires)
 
         if self.measurement == "homodyne":
             return qml.expval(qml.QuadX(self.measurement_mode))
